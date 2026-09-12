@@ -96,16 +96,15 @@ All endpoints were smoke-tested end-to-end against the live Atlas cluster (creat
 
 ### Postman Collection
 
-An exported collection covering **all endpoints** (including filter queries, the 400 validation case, and 404 cases) with automated test assertions is included: [`postman_collection.json`](postman_collection.json).
+An exported Postman collection covering **all endpoints** — including title/status filter queries, the 400 validation case, and both 404 cases — with automated test assertions on every request (status codes, ID matching, updated fields). Import it and hit **Run** to execute the full CRUD cycle in one click.
 
-**Import into Postman:** Import → File → `postman_collection.json` (uses the `base_url` variable, default `http://localhost:3000`).
+**Import into Postman:** Import → File → [`postman_collection.json`](postman_collection.json). The `base_url` variable defaults to the live Heroku deployment; change it to `http://localhost:3000` to test locally.
 
 **Run from CLI (Newman):**
 
 ```bash
-npx newman run postman_collection.json
-# or, after npm install:
-npm run test:api   # starts the server and runs the collection
+npx newman run postman_collection.json            # against the live deployment
+npx newman run postman_collection.json --env-var base_url=http://localhost:3000  # local
 ```
 
 Swagger UI's **Try it out** buttons cover the same flow in the browser.
