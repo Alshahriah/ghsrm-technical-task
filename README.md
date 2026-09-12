@@ -91,4 +91,20 @@ All user-supplied content is HTML-escaped before rendering (XSS-safe `innerHTML`
 
 ## Testing
 
-All endpoints were smoke-tested end-to-end against the live Atlas cluster (create → read all → read by ID → search by title → update → validation rejection → invalid ID 404 → delete → deleted ID 404). Postman or the Swagger UI's **Try it out** buttons cover the same flow.
+All endpoints were smoke-tested end-to-end against the live Atlas cluster (create → read all → read by ID → search by title → update → validation rejection → invalid ID 404 → delete → deleted ID 404).
+
+### Postman Collection
+
+An exported collection covering **all endpoints** (including filter queries, the 400 validation case, and 404 cases) with automated test assertions is included: [`postman_collection.json`](postman_collection.json).
+
+**Import into Postman:** Import → File → `postman_collection.json` (uses the `base_url` variable, default `http://localhost:3000`).
+
+**Run from CLI (Newman):**
+
+```bash
+npx newman run postman_collection.json
+# or, after npm install:
+npm run test:api   # starts the server and runs the collection
+```
+
+Swagger UI's **Try it out** buttons cover the same flow in the browser.

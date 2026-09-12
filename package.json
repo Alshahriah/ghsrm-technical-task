@@ -1,10 +1,11 @@
 {
   "name": "ghsrm",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Task Manager CRUD API — Node.js + Express + MongoDB",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "test:api": "node server.js & sleep 3; npx newman run postman_collection.json; kill %1"
   },
   "keywords": [],
   "author": "",
@@ -15,5 +16,8 @@
     "express": "^5.2.1",
     "mongoose": "^9.10.0",
     "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "newman": "^6.2.2"
   }
 }
