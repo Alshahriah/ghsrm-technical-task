@@ -16,9 +16,8 @@ A complete CRUD REST API for task management built with **Node.js**, **Express**
 
 ```bash
 npm install
-# .env must contain:
-# MONGO_URI=mongodb+srv://<user>:<pass>@cluster.../?appName=...
-node server.js
+cp .env.example .env   # then fill in your MongoDB Atlas URI
+npm start
 ```
 
 Open:
