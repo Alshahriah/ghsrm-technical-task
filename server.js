@@ -22,5 +22,5 @@ app.use((err, _req, res, _next) => {
 });
 
 mongoose.connect(process.env.MONGO_URI + 'tasksdb')
-  .then(() => app.listen(3000, () => console.log('API on http://localhost:3000')))
+  .then(() => app.listen(process.env.PORT || 3000, () => console.log('API on port ' + (process.env.PORT || 3000))))
   .catch(e => { console.error('DB connect failed:', e.message); process.exit(1); });
