@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+  <main class="max-w-2xl mx-auto p-6">
+    <header class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white grid place-items-center text-xl font-bold">T</div>
+      <div>
+        <h1 class="text-xl font-bold text-slate-800">Task Manager</h1>
+        <p class="text-sm text-slate-500">Stay on top of things ·
+          <a href="/api-docs" class="text-indigo-600 hover:underline font-medium">API Docs (Swagger)</a>
+        </p>
+      </div>
+    </header>
+
+    <p class="text-sm text-rose-600 mb-3 min-h-5" id="err"></p>
+
+    <form id="form" class="bg-white rounded-2xl shadow-sm p-4 flex flex-wrap gap-2 mb-6">
+      <input name="title" placeholder="Task title" required
+             class="flex-1 min-w-40 px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      <input name="description" placeholder="Description"
+             class="flex-1 min-w-40 px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      <select name="status"
+              class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700">
+        <option value="todo">To do</option>
+        <option value="in-progress">In progress</option>
+        <option value="done">Done</option>
+      </select>
+      <input name="dueDate" type="date"
+             class="px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700">
+      <button id="submitBtn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition">Add</button>
+      <button id="cancelBtn" type="button" onclick="cancelEdit()" class="hidden px-4 py-2 rounded-lg border border-slate-300 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+    </form>
+
+    <ul id="list" class="space-y-2"></ul>
+  </main>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const api = '/api/tasks';
+    const badges = {
+      'todo': 'bg-slate-100 text-slate-600',
+      'in-progress': 'bg-amber-100 text-amber-700',
+      'done': 'bg-emerald-100 text-emerald-700',
+    };
+
+    let tasksCache = [];
+
+    async function load() {
+      const tasks = await (await fetch(api)).json();
+      tasksCache = tasks;
+      $('#list').innerHTML = tasks.map(t => `
+        <li class="bg-white rounded-xl shadow-sm p-4 flex gap-3 items-center ${t.status === 'done' ? 'opacity-60' : ''}">
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-slate-800 truncate ${t.status === 'done' ? 'line-through' : ''}">${esc(t.title)}</p>
+            ${t.description ? `<p class="text-sm text-slate-500 truncate">${esc(t.description)}</p>` : ''}
+            ${t.dueDate ? `<p class="text-xs text-slate-400 mt-1">Due ${new Date(t.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>` : ''}
+          </div>
+          <select onchange="setStatus('${t._id}', this.value)"
+                  class="text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${badges[t.status]}">
+            ${['todo', 'in-progress', 'done'].map(s =>
+              `<option value="${s}" ${s === t.status ? 'selected' : ''}>${s.replace('-', ' ')}</option>`).join('')}
+          </select>
+          <button onclick="startEdit('${t._id}')" class="text-slate-400 hover:text-indigo-600 transition text-sm font-medium">Edit</button>
+          <button onclick="remove('${t._id}')"
+                  class="text-slate-300 hover:text-rose-500 transition text-lg leading-none">✕</button>
+        </li>`).join('') ||
+        `<li class="bg-white rounded-xl shadow-sm p-8 text-center text-slate-400">No tasks yet — add one above.</li>`;
+    }
+
+    const esc = (s) => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const showErr = (m) => $('#err').textContent = m;
+
+    let editingId = null;
+
+    const startEdit = (id) => {
+      const t = tasksCache.find(t => t._id === id);
+      if (!t) return;
+      editingId = id;
+      $('#form').title.value = t.title;
+      $('#form').description.value = t.description || '';
+      $('#form').status.value = t.status;
+      $('#form').dueDate.value = t.dueDate ? t.dueDate.slice(0, 10) : '';
+      $('#submitBtn').textContent = 'Save';
+      $('#submitBtn').classList.replace('bg-indigo-600', 'bg-emerald-600');
+      $('#cancelBtn').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cancelEdit = () => {
+      editingId = null;
+      $('#form').reset();
+      $('#submitBtn').textContent = 'Add';
+      $('#submitBtn').classList.replace('bg-emerald-600', 'bg-indigo-600');
+      $('#cancelBtn').classList.add('hidden');
+    };
+
+    $('#form').onsubmit = async (e) => {
+      e.preventDefault();
+      const d = Object.fromEntries(new FormData(e.target));
+      if (d.dueDate) d.dueDate = new Date(d.dueDate).toISOString();
+      const res = await fetch(editingId ? `${api}/${editingId}` : api, {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d),
+      });
+      if (!res.ok) return showErr((await res.json()).error);
+      cancelEdit();
+      load();
+    };
+
+    async function setStatus(id, status) {
+      const res = await fetch(`${api}/${id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
+      });
+      if (!res.ok) showErr((await res.json()).error);
+      load();
+    }
+
+    async function remove(id) {
+      await fetch(`${api}/${id}`, { method: 'DELETE' });
+      load();
+    }
+
+    load();
+  </script>
+</body>
+</html>
