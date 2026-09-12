@@ -1,0 +1,106 @@
+{
+  "info": {
+    "name": "Task Manager API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "taskId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Create task",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "pm.test('has _id', () => pm.expect(pm.response.json()).to.have.property('_id'));",
+              "pm.collectionVariables.set('taskId', pm.response.json()._id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Buy milk\",\n  \"description\": \"2L whole\",\n  \"status\": \"todo\",\n  \"dueDate\": \"2026-12-31\"\n}"
+        },
+        "url": "{{base_url}}/api/tasks"
+      }
+    },
+    {
+      "name": "Get all tasks",
+      "request": { "method": "GET", "url": "{{base_url}}/api/tasks" }
+    },
+    {
+      "name": "Get tasks by title (fuzzy)",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/tasks?title=milk", "host": ["{{base_url}}"], "path": ["api", "tasks"], "query": [{ "key": "title", "value": "milk" }] }
+      }
+    },
+    {
+      "name": "Get tasks by status",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/tasks?status=todo", "host": ["{{base_url}}"], "path": ["api", "tasks"], "query": [{ "key": "status", "value": "todo" }] }
+      }
+    },
+    {
+      "name": "Get task by ID",
+      "event": [
+        { "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));", "pm.test('id matches', () => pm.expect(pm.response.json()._id).to.eql(pm.collectionVariables.get('taskId')));"] } }
+      ],
+      "request": { "method": "GET", "url": "{{base_url}}/api/tasks/{{taskId}}" }
+    },
+    {
+      "name": "Get task by bad ID (404)",
+      "event": [
+        { "listen": "test", "script": { "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] } }
+      ],
+      "request": { "method": "GET", "url": "{{base_url}}/api/tasks/000000000000000000000000" }
+    },
+    {
+      "name": "Update task",
+      "event": [
+        { "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));", "pm.test('status updated', () => pm.expect(pm.response.json().status).to.eql('done'));"] } }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"done\",\n  \"description\": \"bought\"\n}" },
+        "url": "{{base_url}}/api/tasks/{{taskId}}"
+      }
+    },
+    {
+      "name": "Create invalid task (400)",
+      "event": [
+        { "listen": "test", "script": { "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Bad task\",\n  \"status\": \"weird\"\n}" },
+        "url": "{{base_url}}/api/tasks"
+      }
+    },
+    {
+      "name": "Delete task",
+      "event": [
+        { "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"] } }
+      ],
+      "request": { "method": "DELETE", "url": "{{base_url}}/api/tasks/{{taskId}}" }
+    },
+    {
+      "name": "Get deleted task (404)",
+      "event": [
+        { "listen": "test", "script": { "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] } }
+      ],
+      "request": { "method": "GET", "url": "{{base_url}}/api/tasks/{{taskId}}" }
+    }
+  ]
+}
