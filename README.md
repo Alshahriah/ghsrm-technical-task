@@ -24,8 +24,10 @@ Open:
 
 | URL | What |
 |---|---|
-| http://localhost:3000 | Task Manager UI |
-| http://localhost:3000/api-docs | Swagger UI |
+| [Live demo](https://ghsrm-task-manager-474b2611364d.herokuapp.com) | Task Manager UI (Heroku) |
+| [Live API docs](https://ghsrm-task-manager-474b2611364d.herokuapp.com/api-docs) | Swagger UI (Heroku) |
+| http://localhost:3000 | Task Manager UI (local) |
+| http://localhost:3000/api-docs | Swagger UI (local) |
 | http://localhost:3000/api/tasks | JSON API |
 
 ## Project Structure
